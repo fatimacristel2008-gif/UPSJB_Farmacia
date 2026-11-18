@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class CategoryController extends Controller
 {
@@ -12,7 +13,8 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        return view('settings.categories.index');
+        $categories = Category::all();
+        return view('settings.categories.index', compact('categories'));
     }
 
     /**
@@ -20,7 +22,7 @@ class CategoryController extends Controller
      */
     public function create()
     {
-         return view('settings.categories.create');
+        return view('settings.categories.create');
     }
 
     /**
@@ -28,15 +30,14 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        //
-    }
+        $validated = Validator::make($request->all(), [
+            'nombre' => 'required|max:50|unique:categories',
+            'descripcion' => 'nullable|max:255',
+        ])->validate();
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Category $category)
-    {
-        //
+        Category::query()->create($validated);
+
+        return to_route('categories.index')->with('ok', 'Categoría registrada correctamente.');
     }
 
     /**
@@ -44,7 +45,7 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-        //
+        return view('settings.categories.edit', compact('category'));
     }
 
     /**
@@ -52,14 +53,28 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category)
     {
-        //
+        $validated = Validator::make($request->all(), [
+            'nombre' => 'required|max:50|unique:categories,nombre,' . $category->id,
+            'descripcion' => 'nullable|max:255',
+        ])->validate();
+
+        $category->update($validated);
+
+        return to_route('categories.index')->with('ok', 'Categoría actualizada correctamente.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(Category $category)
-    {
-        //
+   {
+        if ($category->medicines()->exists()) {
+            return to_route('categories.index')->with('error', 'No se puede eliminar: la categoría tiene medicamentos asociados.');
+        }
+
+        $category->delete();
+
+        return to_route('categories.index')->with('ok', 'Categoría eliminada correctamente.');
     }
+    
 }
