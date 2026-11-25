@@ -1,3 +1,4 @@
+<!-- MODAL — Confirmar Cierre de Sesión -->
 <div class="modal fade" id="logoutModal" tabindex="-1"
      aria-labelledby="logoutModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-sm">

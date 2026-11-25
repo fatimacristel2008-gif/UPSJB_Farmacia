@@ -1,0 +1,55 @@
+<?php
+
+return [
+
+    'array' => 'El campo :attribute debe ser una lista.',
+    'boolean' => 'El campo :attribute debe ser verdadero o falso.',
+    'confirmed' => 'La confirmación de :attribute no coincide.',
+    'date' => 'El campo :attribute no es una fecha válida.',
+    'digits' => 'El campo :attribute debe tener :digits dígitos.',
+    'distinct' => 'El campo :attribute tiene un valor repetido.',
+    'email' => 'El campo :attribute debe ser un correo válido.',
+    'exists' => 'La opción seleccionada en :attribute no es válida.',
+    'image' => 'El campo :attribute debe ser una imagen.',
+    'integer' => 'El campo :attribute debe ser un número entero.',
+    'max' => [
+        'numeric' => 'El campo :attribute no debe ser mayor que :max.',
+        'file' => 'El archivo :attribute no debe pesar más de :max KB.',
+        'string' => 'El campo :attribute no debe tener más de :max caracteres.',
+        'array' => 'El campo :attribute no debe tener más de :max elementos.',
+    ],
+    'mimes' => 'El campo :attribute debe ser un archivo de tipo: :values.',
+    'min' => [
+        'numeric' => 'El campo :attribute debe ser al menos :min.',
+        'file' => 'El archivo :attribute debe pesar al menos :min KB.',
+        'string' => 'El campo :attribute debe tener al menos :min caracteres.',
+        'array' => 'El campo :attribute debe tener al menos :min elementos.',
+    ],
+    'numeric' => 'El campo :attribute debe ser un número.',
+    'required' => 'El campo :attribute es obligatorio.',
+    'string' => 'El campo :attribute debe ser texto.',
+    'unique' => 'El :attribute ya está registrado.',
+    'uploaded' => 'El archivo :attribute no se pudo subir.',
+
+    'attributes' => [
+        'name' => 'nombre',
+        'description' => 'descripción',
+        'dni' => 'DNI',
+        'phone' => 'teléfono',
+        'age' => 'edad',
+        'tuition' => 'colegiatura',
+        'email' => 'correo electrónico',
+        'password' => 'contraseña',
+        'role_id' => 'rol',
+        'category_id' => 'categoría',
+        'price' => 'precio',
+        'stock' => 'stock',
+        'image' => 'imagen',
+        'customer_id' => 'cliente',
+        'user_id' => 'vendedor',
+        'items' => 'medicamentos',
+        'items.*.medicine_id' => 'medicamento',
+        'items.*.amount' => 'cantidad',
+    ],
+
+];
