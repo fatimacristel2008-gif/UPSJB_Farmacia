@@ -1,158 +1,41 @@
 @extends('template.administrador')
-
-@section('title', 'REPORTES')
-@section('name-section', 'REPORTES')
-
-@section('description', 'Reporte de ventas y stock')
+@section('title', 'Reportes')
+@section('name-section', 'Reporte de ventas')
+@section('description', 'Consulta y análisis de ventas de la farmacia')
 @section('item-breadcrumb', 'Inicio')
 @section('section-breadcrumb', 'Reportes')
-@section('module-breadcrumb', 'Principal')
-
-
+@section('module-breadcrumb', 'Administración')
 @section('content')
-<div class="card bg-white border-0 shadow-sm border-5 border-top border-secondary mb-3">
-    <div class="card-body">
-        <form action="{{ route('reports.index') }}" method="GET" class="row g-2 align-items-end">
-            <div class="col-12 col-md-4">
-                <label for="from" class="form-label small">Desde</label>
-                <input type="date" name="from" id="from" class="form-control" value="{{ $from->format('Y-m-d') }}">
-            </div>
-            <div class="col-12 col-md-4">
-                <label for="to" class="form-label small">Hasta</label>
-                <input type="date" name="to" id="to" class="form-control" value="{{ $to->format('Y-m-d') }}">
-            </div>
-            <div class="col-12 col-md-4 d-flex gap-1">
-                <button type="submit" class="btn btn-outline-primary w-100"><i class="bi bi-search me-1"></i>Consultar</button>
-                <a href="{{ route('reports.index') }}" class="btn btn-outline-secondary w-100" title="Mes actual"><i class="bi bi-x-lg"></i></a>
-            </div>
-        </form>
-    </div>
+<style>
+.report-panel{background:#fff;border:1px solid #ddd;border-top:3px solid #343a40;border-radius:4px;padding:16px;margin-bottom:18px;color:#343a40}
+.report-filters,.report-kpis{display:grid;gap:14px;align-items:end}.report-filters{grid-template-columns:repeat(4,minmax(0,1fr)) auto auto}.report-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.report-kpi{display:flex;justify-content:space-between;align-items:center}.report-kpi strong{display:block;font-size:24px}.report-kpi i{font-size:25px;color:#6c757d}.report-filters label{display:block;font-size:13px;margin-bottom:5px}.report-filters input,.report-filters select{width:100%;min-width:0}.report-red{background:#dc3545;color:white;border:1px solid #dc3545}.report-red:hover{background:#bb2d3b;color:white}.report-chart{height:330px;position:relative}.report-panel h6{font-weight:700;margin-bottom:15px}@media(max-width:900px){.report-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.report-kpis{grid-template-columns:1fr}}@media print{.report-filters,#sidebar,.app-header{display:none!important}}
+</style>
+<div class="report-panel">
+<form class="report-filters" method="GET" action="{{ route('reports.index') }}">
+<div><label for="from">Desde</label><input class="form-control" type="date" id="from" name="from" value="{{ $from }}"></div>
+<div><label for="to">Hasta</label><input class="form-control" type="date" id="to" name="to" value="{{ $to }}"></div>
+<div><label for="seller">Vendedor</label><select class="form-select" id="seller" name="seller"><option value="">Todos</option>@foreach($vendors as $vendor)<option value="{{ $vendor->id }}" @selected($seller == $vendor->id)>{{ $vendor->name }}</option>@endforeach</select></div>
+<div><label for="category">Categoría</label><select class="form-select" id="category" name="category"><option value="">Todas</option>@foreach($categories as $item)<option value="{{ $item->id }}" @selected($category == $item->id)>{{ $item->name }}</option>@endforeach</select></div>
+<button class="btn report-red" type="submit"><i class="bi bi-funnel"></i> Filtrar</button>
+<a class="btn btn-outline-secondary" title="Limpiar filtros" href="{{ route('reports.index') }}"><i class="bi bi-arrow-counterclockwise"></i> Limpiar</a>
+<a class="btn btn-outline-danger" href="{{ route('reports.export.pdf', request()->only(['from','to','seller','category'])) }}"><i class="bi bi-file-earmark-pdf"></i> Descargar PDF</a>
+<a class="btn btn-outline-success" href="{{ route('reports.export.excel', request()->only(['from','to','seller','category'])) }}"><i class="bi bi-file-earmark-excel"></i> Descargar Excel</a>
+</form>
+@foreach($errors->all() as $error)<div class="text-danger mt-2">{{ $error }}</div>@endforeach
 </div>
-
-<div class="row g-3 mb-3">
-    <div class="col-12 col-md-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="text-secondary small">Ventas en el periodo</div>
-                <div class="fs-4 fw-bold">{{ $sales->count() }}</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="text-secondary small">Total vendido (incluye IGV)</div>
-                <div class="fs-4 fw-bold">S/ {{ number_format($totalSales, 2) }}</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="text-secondary small">IGV (18%)</div>
-                <div class="fs-4 fw-bold">S/ {{ number_format($totalIgv, 2) }}</div>
-                <div class="text-secondary small">Op. gravada: S/ {{ number_format($totalSales - $totalIgv, 2) }}</div>
-            </div>
-        </div>
-    </div>
+<div class="report-kpis">
+<div class="report-panel report-kpi"><div><small>Total vendido</small><strong>S/ {{ number_format($totalSales,2) }}</strong></div><i class="bi bi-cash-stack"></i></div>
+<div class="report-panel report-kpi"><div><small>Número de ventas</small><strong>{{ $salesCount }}</strong></div><i class="bi bi-receipt"></i></div>
+<div class="report-panel report-kpi"><div><small>Ticket promedio</small><strong>S/ {{ number_format($averageSale,2) }}</strong></div><i class="bi bi-bar-chart"></i></div>
 </div>
-
-<div class="row g-3 mb-3">
-    <div class="col-12 col-lg-6">
-        <div class="card bg-white border-0 shadow-sm h-100">
-            <div class="card-body">
-                <h6 class="text-uppercase small text-muted mb-3">Medicamentos más vendidos</h6>
-                <table class="table table-sm align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th class="small text-uppercase text-center">Nº</th>
-                            <th class="small text-uppercase">Medicamento</th>
-                            <th class="small text-uppercase text-center">Cantidad</th>
-                            <th class="small text-uppercase text-end">Importe</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($topMedicines as $item)
-                            <tr>
-                                <td class="text-center">{{ $loop->iteration }}</td>
-                                <td>{{ $item->medicine->name }}</td>
-                                <td class="text-center">{{ $item->quantity }}</td>
-                                <td class="text-end">S/ {{ number_format($item->amount, 2) }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" class="text-center text-muted py-3">No hay ventas en el periodo</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-lg-6">
-        <div class="card bg-white border-0 shadow-sm h-100">
-            <div class="card-body">
-                <h6 class="text-uppercase small text-muted mb-3">Medicamentos con stock bajo</h6>
-                <table class="table table-sm align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th class="small text-uppercase">Medicamento</th>
-                            <th class="small text-uppercase">Categoría</th>
-                            <th class="small text-uppercase text-center">Stock</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($lowStockMedicines as $medicine)
-                            <tr>
-                                <td>{{ $medicine->name }}</td>
-                                <td>{{ $medicine->category->name }}</td>
-                                <td class="text-center"><span class="badge bg-danger">{{ $medicine->stock }}</span></td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="3" class="text-center text-muted py-3">No hay medicamentos con stock bajo</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="card bg-white border-0 shadow-sm border-5 border-top border-secondary">
-    <div class="card-body">
-        <h6 class="text-uppercase small text-muted mb-3">Ventas del {{ $from->format('d/m/Y') }} al {{ $to->format('d/m/Y') }}</h6>
-        <table class="table table-sm table-hover w-100 bg-white mb-0">
-            <thead>
-                <tr>
-                    <th class="text-center align-middle text-uppercase small">Nº</th>
-                    <th class="text-center align-middle text-uppercase small">Fecha</th>
-                    <th class="text-center align-middle text-uppercase small">Cliente</th>
-                    <th class="text-center align-middle text-uppercase small">Vendedor</th>
-                    <th class="text-center align-middle text-uppercase small">IGV</th>
-                    <th class="text-center align-middle text-uppercase small">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($sales as $sale)
-                    <tr>
-                        <td class="text-center align-middle">
-                            <a href="{{ route('sales.show', $sale) }}">{{ str_pad($sale->id, 6, '0', STR_PAD_LEFT) }}</a>
-                        </td>
-                        <td class="text-center align-middle">{{ $sale->date->format('d/m/Y H:i') }}</td>
-                        <td class="text-start align-middle">{{ $sale->customer->name }}</td>
-                        <td class="text-start align-middle">{{ $sale->user->name }}</td>
-                        <td class="text-end align-middle">S/ {{ number_format($sale->igv, 2) }}</td>
-                        <td class="text-end align-middle">S/ {{ number_format($sale->total, 2) }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" class="text-center text-muted py-3">No hay ventas en el periodo</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-</div>
+<div class="report-panel"><h6>Ventas por día</h6><div class="report-chart"><canvas id="reportSalesChart"></canvas></div></div>
+<div class="report-panel"><h6>Detalle de ventas</h6><div class="table-responsive"><table class="table table-hover"><thead><tr><th>Fecha</th><th>Cliente</th><th>Vendedor</th><th class="text-end">Total</th></tr></thead><tbody>
+@forelse($recentSales as $sale)<tr><td>{{ $sale->date?->format('d/m/Y H:i') }}</td><td>{{ $sale->customer->name ?? 'Sin cliente' }}</td><td>{{ $sale->user->name ?? 'Sin vendedor' }}</td><td class="text-end">S/ {{ number_format($sale->total,2) }}</td></tr>@empty<tr><td colspan="4" class="text-center text-muted">No hay ventas para los filtros seleccionados.</td></tr>@endforelse
+</tbody></table></div></div>
 @endsection
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{const canvas=document.getElementById('reportSalesChart');if(!window.Chart){canvas.parentElement.textContent='No se pudo cargar Chart.js. Comprueba tu conexión a internet.';return;}new Chart(canvas,{type:'bar',data:{labels:@json($labels),datasets:[{label:'Ventas por día',data:@json($values),backgroundColor:'#dc3545',borderRadius:2,maxBarThickness:30}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'S/ '+Number(c.raw).toFixed(2)}}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'S/ '+v}},x:{ticks:{maxRotation:55,minRotation:45,autoSkip:true}}}}});});
+</script>
+@endpush

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
@@ -45,14 +44,14 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login')
-            ->with('ok', 'Has cerrado sesión correctamente.');
+            ->with('ok', 'Cerraste sesión correctamente.');
     }
 
     // Mostrar perfil
     public function profile()
     {
         return view('settings.profile.index', [
-            'user' => Auth::user()
+            'user' => Auth::user(),
         ]);
     }
 
@@ -90,12 +89,9 @@ class AuthController extends Controller
             'current_password' => ['required', 'current_password'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ], [
-            'current_password.current_password' =>
-                'La contraseña actual no es correcta.',
-            'password.confirmed' =>
-                'La confirmación de la contraseña no coincide.',
-            'password.min' =>
-                'La nueva contraseña debe tener al menos 8 caracteres.',
+            'current_password.current_password' => 'La contraseña actual no es correcta.',
+            'password.confirmed' => 'La confirmación de la contraseña no coincide.',
+            'password.min' => 'La nueva contraseña debe tener al menos 8 caracteres.',
         ]);
 
         $user = Auth::user();
@@ -137,4 +133,3 @@ class AuthController extends Controller
         return back()->with('ok', 'Tus preferencias se guardaron correctamente.');
     }
 }
-

@@ -1,4 +1,12 @@
-  <aside id="sidebar" class="bg-dark text-white d-flex flex-column flex-shrink-0" aria-label="Navegación principal">
+<aside id="sidebar" class="bg-dark text-white d-flex flex-column flex-shrink-0" aria-label="Navegación principal">
+
+    @php
+      $authenticatedUser = auth()->user();
+      $authenticatedName = $authenticatedUser->name ?? '';
+      $authenticatedEmail = $authenticatedUser->email ?? '';
+      $authenticatedInitials = mb_strtoupper(mb_substr(trim($authenticatedName), 0, 2));
+      $authenticatedRole = $authenticatedUser->role->name ?? 'Sin rol';
+    @endphp
 
     <div class="d-flex align-items-center px-3 pt-4 pb-3">
       <div class="brand-icon rounded-circle bg-primary d-flex align-items-center justify-content-center me-2 flex-shrink-0">
@@ -78,11 +86,11 @@
               aria-haspopup="true"
               aria-label="Opciones de cuenta">
         <div class="user-avatar rounded-circle bg-primary d-flex align-items-center justify-content-center flex-shrink-0">
-          <span class="text-white fw-bold lh-1">SJ</span>
+          <span class="text-white fw-bold lh-1">{{ $authenticatedInitials }}</span>
         </div>
         <div class="lh-sm overflow-hidden flex-grow-1 text-start">
-          <div class="text-white fw-semibold small">Administrador</div>
-          <div class="text-white-50" style="font-size:.7rem">admin@sanjuan.com</div>
+          <div class="text-white fw-semibold small">{{ $authenticatedName }}</div>
+          <div class="text-white-50" style="font-size:.7rem">{{ $authenticatedEmail }}</div>
         </div>
         <i class="bi bi-chevron-up text-white-50 small user-menu-chevron"></i>
       </button>
@@ -90,12 +98,12 @@
         <li class="px-3 py-2 border-bottom" style="background:var(--bs-tertiary-bg)">
           <div class="d-flex align-items-center gap-2">
             <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width:40px;height:40px">
-              <span class="text-white fw-bold small">SJ</span>
+              <span class="text-white fw-bold small">{{ $authenticatedInitials }}</span>
             </div>
             <div class="lh-sm overflow-hidden">
-              <div class="fw-semibold small">Administrador</div>
-              <div class="text-secondary" style="font-size:.7rem">admin@sanjuan.com</div>
-              <span class="badge bg-primary-subtle text-primary mt-1 px-2 rounded-pill" style="font-size:.6rem;font-weight:600">Super Admin</span>
+              <div class="fw-semibold small">{{ $authenticatedName }}</div>
+              <div class="text-secondary" style="font-size:.7rem">{{ $authenticatedEmail }}</div>
+              <span class="badge bg-primary-subtle text-primary mt-1 px-2 rounded-pill" style="font-size:.6rem;font-weight:600">{{ $authenticatedRole }}</span>
             </div>
           </div>
         </li>

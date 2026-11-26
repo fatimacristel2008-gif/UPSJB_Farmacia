@@ -50,6 +50,7 @@
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <li><a class="dropdown-item" href="{{ route('sales.show', $sale) }}">Ver detalle</a></li>
+                                        <li><a class="dropdown-item" href="{{ route('sales.edit', $sale) }}">Editar</a></li>
                                         <li>
                                             <form action="{{ route('sales.destroy', $sale) }}" method="POST" onsubmit="return confirm('¿Seguro que desea anular esta venta? El stock será devuelto.')">
                                                 @csrf

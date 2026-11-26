@@ -2,57 +2,86 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DetailSale;
-use App\Models\Medicine;
+use App\Models\Category;
 use App\Models\Sale;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class ReportController extends Controller
 {
     public function index(Request $request)
     {
-        $dates = Validator::make($request->only('from', 'to'), [
-            'from' => 'nullable|date_format:Y-m-d',
-            'to' => 'nullable|date_format:Y-m-d',
-        ])->valid();
+        $request->validate([
+            'from' => 'nullable|date',
+            'to' => 'nullable|date|after_or_equal:from',
+            'seller' => 'nullable|exists:users,id',
+            'category' => 'nullable|exists:categories,id',
+        ]);
 
-        $from = isset($dates['from']) ? Carbon::parse($dates['from']) : now()->startOfMonth();
-        $to = isset($dates['to']) ? Carbon::parse($dates['to']) : now();
+        $from = $request->input('from')
+            ?: now()->startOfMonth()->toDateString();
 
-        if ($from->gt($to)) {
-            [$from, $to] = [$to, $from];
+        $to = $request->input('to')
+            ?: now()->toDateString();
+
+        $seller = $request->input('seller');
+        $category = $request->input('category');
+
+        $vendors = User::orderBy('name')->get();
+        $categories = Category::orderBy('name')->get();
+
+        $query = Sale::query()
+            ->whereDate('date', '>=', $from)
+            ->whereDate('date', '<=', $to)
+            ->when($seller, function ($q) use ($seller) {
+                $q->where('user_id', $seller);
+            })
+            ->when($category, function ($q) use ($category) {
+                $q->whereHas('details.medicine', function ($m) use ($category) {
+                    $m->where('category_id', $category);
+                });
+            });
+
+        $totalSales = (clone $query)->sum('total');
+        $salesCount = (clone $query)->count();
+        $averageSale = $salesCount ? $totalSales / $salesCount : 0;
+
+        $recentSales = (clone $query)
+            ->with(['customer', 'user'])
+            ->orderByDesc('date')
+            ->get();
+
+        $daily = (clone $query)
+            ->selectRaw('DATE(date) as day, SUM(total) as revenue')
+            ->groupByRaw('DATE(date)')
+            ->pluck('revenue', 'day');
+
+        $labels = [];
+        $values = [];
+
+        for (
+            $day = Carbon::parse($from);
+            $day->lte(Carbon::parse($to));
+            $day->addDay()
+        ) {
+            $labels[] = $day->format('d/m/Y');
+            $values[] = (float) ($daily[$day->toDateString()] ?? 0);
         }
 
-        $range = [$from->copy()->startOfDay(), $to->copy()->endOfDay()];
-
-        $sales = Sale::with(['customer', 'user'])
-            ->whereBetween('date', $range)
-            ->latest('date')
-            ->get();
-
-        $totalSales = $sales->sum('total');
-        $totalIgv = $sales->sum('igv');
-
-        $topMedicines = DetailSale::with('medicine')
-            ->select('medicine_id', DB::raw('SUM(amount) as quantity'), DB::raw('SUM(subtotal) as amount'))
-            ->whereHas('sale', function ($query) use ($range) {
-                $query->whereBetween('date', $range);
-            })
-            ->groupBy('medicine_id')
-            ->orderByDesc('quantity')
-            ->take(5)
-            ->get();
-
-        $lowStockMedicines = Medicine::with('category')
-            ->where('stock', '<=', MedicineController::LOW_STOCK)
-            ->orderBy('stock')
-            ->get();
-
         return view('principal.reports.index', compact(
-            'from', 'to', 'sales', 'totalSales', 'totalIgv', 'topMedicines', 'lowStockMedicines'
+            'from',
+            'to',
+            'seller',
+            'category',
+            'vendors',
+            'categories',
+            'totalSales',
+            'salesCount',
+            'averageSale',
+            'recentSales',
+            'labels',
+            'values'
         ));
     }
 }

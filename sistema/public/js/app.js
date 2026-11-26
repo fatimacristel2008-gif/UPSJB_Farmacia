@@ -1,3 +1,17 @@
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initSidebarToggle();
+  initUserDropdown();
+  initLogoutConfirm();
+  initTooltips();
+  initLoginForm();
+});
+
 function initSidebarToggle() {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
@@ -50,9 +64,7 @@ function initUserDropdown() {
 }
 
 function initLogoutConfirm() {
-  document.getElementById('confirmLogoutBtn')?.addEventListener('click', () => {
-    window.location.href = '#';
-  });
+  // El cierre de sesión se realiza mediante el formulario POST del modal.
 }
 
 function initTooltips() {
@@ -67,18 +79,27 @@ function initLoginForm() {
 
   const password = document.getElementById('loginPassword');
   const toggle = document.getElementById('togglePassword');
-  toggle?.addEventListener('click', () => {
+  toggle?.addEventListener('click', (event) => {
+    event.preventDefault();
+
     const visible = password.type === 'text';
     password.type = visible ? 'password' : 'text';
+
+    const icon = toggle.querySelector('i');
     toggle.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
-    toggle.querySelector('i').className = `bi ${visible ? 'bi-eye' : 'bi-eye-slash'} text-secondary`;
+
+    if (icon) {
+      icon.classList.toggle('bi-eye', visible);
+      icon.classList.toggle('bi-eye-slash', !visible);
+      icon.classList.add('text-secondary');
+    }
+
+    toggle.blur();
   });
 
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    document.getElementById('loginAlert')?.classList.add('d-none');
-
+  form.addEventListener('submit', (event) => {
     if (!form.checkValidity()) {
+      event.preventDefault();
       form.classList.add('was-validated');
       return;
     }
@@ -87,16 +108,5 @@ function initLoginForm() {
     submit.disabled = true;
     submit.querySelector('.spinner-border').classList.remove('d-none');
     submit.querySelector('.btn-label').textContent = 'Ingresando...';
-
-    // Prototipo: simula la autenticación y redirige al dashboard
-    setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
   });
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-  initSidebarToggle();
-  initUserDropdown();
-  initLogoutConfirm();
-  initTooltips();
-  initLoginForm();
-});
